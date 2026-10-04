@@ -21,27 +21,38 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.1.0'
-      - name: Patch Turkish search and display names
+      - name: Patch normalized Turkish search and display names
         shell: python
         run: |
           from pathlib import Path
           p=Path('src/main/java/net/chickensell/ChickenSell.java')
           s=p.read_text(encoding='utf-8')
           old_search='q.isEmpty()||pretty(m).toLowerCase(Locale.ROOT).contains(q)||m.name().toLowerCase(Locale.ROOT).contains(q)'
-          new_search='q.isEmpty()||TurkishNames.material(m).toLowerCase(Locale.forLanguageTag("tr-TR")).contains(q.toLowerCase(Locale.forLanguageTag("tr-TR")))||m.name().toLowerCase(Locale.ROOT).contains(q.toLowerCase(Locale.ROOT))'
+          new_search='q.isEmpty()||searchNorm(TurkishNames.material(m)).contains(searchNorm(q))||searchNorm(m.name()).contains(searchNorm(q))'
           if old_search not in s:
               raise SystemExit('Search expression not found')
           s=s.replace(old_search,new_search,1)
-          old_names='private String pretty(Material m){return prettyKey(m.name());}private String prettyEnchant(Enchantment e){return prettyKey(e.getKey().getKey());}'
-          new_names='private String pretty(Material m){return TurkishNames.material(m);}private String prettyEnchant(Enchantment e){return TurkishNames.enchant(e);}'
-          if old_names not in s:
+          marker='private String pretty(Material m){return prettyKey(m.name());}private String prettyEnchant(Enchantment e){return prettyKey(e.getKey().getKey());}'
+          replacement='private String searchNorm(String s){if(s==null)return "";return java.text.Normalizer.normalize(s,java.text.Normalizer.Form.NFD).replaceAll("\\\\p{M}+","").toLowerCase(Locale.ROOT).replace("ı","i").replace("ş","s").replace("ç","c").replace("ğ","g").replace("ö","o").replace("ü","u");}private String pretty(Material m){return TurkishNames.material(m);}private String prettyEnchant(Enchantment e){return TurkishNames.enchant(e);}'
+          if marker not in s:
               raise SystemExit('Turkish-name patch target not found')
-          s=s.replace(old_names,new_names,1)
+          s=s.replace(marker,replacement,1)
           p.write_text(s,encoding='utf-8')
+          # Verify the exact code that will be compiled.
+          out=p.read_text(encoding='utf-8')
+          assert 'searchNorm(TurkishNames.material(m)).contains(searchNorm(q))' in out
+          assert 'private String searchNorm(String s)' in out
+          assert 'private String pretty(Material m){return TurkishNames.material(m);}' in out
+          print('Verified: normalized Turkish search is present in ChickenSell.java before build')
       - name: Build
         run: gradle clean build
+      - name: Verify compiled classes
+        run: |
+          test -f build/libs/ChickenSell-1.4.0.jar
+          jar tf build/libs/ChickenSell-1.4.0.jar | grep 'net/chickensell/ChickenSell.class'
+          jar tf build/libs/ChickenSell-1.4.0.jar | grep 'net/chickensell/TurkishNames.class'
       - name: Upload plugin JAR
         uses: actions/upload-artifact@v4
         with:
-          name: ChickenSell-1.4.0-turkish-search-fixed
+          name: ChickenSell-1.4.0-turkish-search-normalized
           path: build/libs/ChickenSell-1.4.0.jar
