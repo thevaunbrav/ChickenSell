@@ -1,9 +1,9 @@
 name: ChickenSell
-version: 1.1.0
+version: 1.2.0
 main: net.chickensell.ChickenSell
 api-version: '26.2'
 author: thevaunbrav
-description: Custom sell system for the server.
+description: Donut-style custom sell and category progression system.
 depend: [Vault]
 commands:
   sell:
