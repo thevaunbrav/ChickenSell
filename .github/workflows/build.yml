@@ -29,5 +29,5 @@ jobs:
       - name: Upload plugin JAR
         uses: actions/upload-artifact@v4
         with:
-          name: ChickenSell-1.0.1
-          path: build/libs/ChickenSell-1.0.1.jar
+          name: ChickenSell-1.1.0
+          path: build/libs/ChickenSell-1.1.0.jar
