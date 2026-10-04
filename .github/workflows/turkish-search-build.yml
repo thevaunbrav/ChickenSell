@@ -22,17 +22,10 @@ jobs:
           p=Path('src/main/java/net/chickensell/ChickenSell.java')
           s=p.read_text(encoding='utf-8')
           old='q.isEmpty()||pretty(m).toLowerCase(Locale.ROOT).contains(q)||m.name().toLowerCase(Locale.ROOT).contains(q)'
-          new='q.isEmpty()||pretty(m).toLowerCase(Locale.forLanguageTag("tr-TR")).contains(q)||m.name().toLowerCase(Locale.ROOT).contains(q)'
+          new='q.isEmpty()||TurkishNames.material(m).toLowerCase(Locale.forLanguageTag("tr-TR")).contains(q.toLowerCase(Locale.forLanguageTag("tr-TR")))||m.name().toLowerCase(Locale.ROOT).contains(q.toLowerCase(Locale.ROOT))'
           if old not in s:
               raise SystemExit('Search expression not found')
           s=s.replace(old,new,1)
-          oldq='String q=searches.getOrDefault(p.getUniqueId(),"").trim().toLowerCase(Locale.ROOT);'
-          newq='String q=searches.getOrDefault(p.getUniqueId(),"").trim().toLowerCase(Locale.forLanguageTag("tr-TR"));'
-          if oldq not in s:
-              raise SystemExit('Search query normalization not found')
-          s=s.replace(oldq,newq,1)
-          # build.yml patches pretty(Material) to TurkishNames.material(m) before Maven runs,
-          # so filtering pretty(m) now searches the exact Turkish name displayed in the GUI.
           p.write_text(s,encoding='utf-8')
       - name: Apply Turkish display names
         shell: python
