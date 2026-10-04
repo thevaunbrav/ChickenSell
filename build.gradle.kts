@@ -3,15 +3,17 @@ plugins {
 }
 
 group = "net.chickensell"
-version = "1.0.1"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://jitpack.io")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.2.build.129-stable")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
 }
 
 java {
