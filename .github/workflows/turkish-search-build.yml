@@ -22,20 +22,33 @@ jobs:
           p=Path('src/main/java/net/chickensell/ChickenSell.java')
           s=p.read_text(encoding='utf-8')
           old='q.isEmpty()||pretty(m).toLowerCase(Locale.ROOT).contains(q)||m.name().toLowerCase(Locale.ROOT).contains(q)'
-          new=old+'||turkishSearch(m).contains(q)'
+          new='q.isEmpty()||pretty(m).toLowerCase(Locale.forLanguageTag("tr-TR")).contains(q)||m.name().toLowerCase(Locale.ROOT).contains(q)'
           if old not in s:
               raise SystemExit('Search expression not found')
           s=s.replace(old,new,1)
-          marker='private String pretty(Material m){return prettyKey(m.name());}'
-          helper='private String turkishSearch(Material m){String n=m.name().toLowerCase(Locale.ROOT);String[][] a={{"bed","yatak"},{"sponge","sünger"},{"dark_oak","koyu meşe"},{"oak","meşe"},{"spruce","ladin"},{"birch","huş"},{"jungle","orman"},{"acacia","akasya"},{"mangrove","mangrov"},{"cherry","kiraz"},{"bamboo","bambu"},{"diamond","elmas"},{"emerald","zümrüt"},{"iron","demir"},{"gold","altın"},{"copper","bakır"},{"coal","kömür"},{"redstone","kızıltaş"},{"stone","taş"},{"cobblestone","kırıktaş"},{"sand","kum"},{"gravel","çakıl"},{"glass","cam"},{"wool","yün"},{"concrete","beton"},{"terracotta","terakota"},{"planks","tahta"},{"log","kütük"},{"wood","odun"},{"white","beyaz"},{"orange","turuncu"},{"magenta","eflatun"},{"light_blue","açık mavi"},{"yellow","sarı"},{"lime","açık yeşil"},{"pink","pembe"},{"light_gray","açık gri"},{"gray","gri"},{"cyan","camgöbeği"},{"purple","mor"},{"blue","mavi"},{"brown","kahverengi"},{"green","yeşil"},{"red","kırmızı"},{"black","siyah"}};for(String[] x:a)n=n.replace(x[0],x[1]);return n.replace(\'_\',\' \');}'
-          if marker not in s:
-              raise SystemExit('pretty() marker not found')
-          s=s.replace(marker,helper+marker,1)
+          oldq='String q=searches.getOrDefault(p.getUniqueId(),"").trim().toLowerCase(Locale.ROOT);'
+          newq='String q=searches.getOrDefault(p.getUniqueId(),"").trim().toLowerCase(Locale.forLanguageTag("tr-TR"));'
+          if oldq not in s:
+              raise SystemExit('Search query normalization not found')
+          s=s.replace(oldq,newq,1)
+          # build.yml patches pretty(Material) to TurkishNames.material(m) before Maven runs,
+          # so filtering pretty(m) now searches the exact Turkish name displayed in the GUI.
+          p.write_text(s,encoding='utf-8')
+      - name: Apply Turkish display names
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('src/main/java/net/chickensell/ChickenSell.java')
+          s=p.read_text(encoding='utf-8')
+          old='private String pretty(Material m){return prettyKey(m.name());}private String prettyEnchant(Enchantment e){return prettyKey(e.getKey().getKey());}'
+          new='private String pretty(Material m){return TurkishNames.material(m);}private String prettyEnchant(Enchantment e){return TurkishNames.enchant(e);}'
+          if old in s:
+              s=s.replace(old,new,1)
           p.write_text(s,encoding='utf-8')
       - name: Build
         run: mvn -B package
       - name: Upload plugin
         uses: actions/upload-artifact@v4
         with:
-          name: ChickenSell-1.8.1-turkish-search
+          name: ChickenSell-1.8.1-turkish-search-fixed
           path: target/*.jar
