@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "net.chickensell"
-version = "1.2.0"
+version = "1.3.0"
 
 repositories {
     mavenCentral()
@@ -20,6 +20,4 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
-tasks.withType<JavaCompile>().configureEach {
-    options.encoding = "UTF-8"
-}
+tasks.withType<JavaCompile>().configureEach { options.encoding = "UTF-8" }
