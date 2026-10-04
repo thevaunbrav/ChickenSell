@@ -1,0 +1,15 @@
+name: ChickenSell
+version: 1.0.1
+main: net.chickensell.ChickenSell
+api-version: '26.2'
+author: thevaunbrav
+description: Custom sell system for the server.
+commands:
+  sell:
+    description: Opens the sell menu.
+    usage: /sell
+    permission: chickensell.use
+permissions:
+  chickensell.use:
+    description: Allows use of /sell.
+    default: true
